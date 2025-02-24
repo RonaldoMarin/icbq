@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id               Int      @id @default(autoincrement())
+  nome             String
+  email            String
+  telefone         String
+  cpf              String   @unique
+  data_aniversario DateTime
+  data_cadastro    DateTime @default(now())
+  data_atualizacao DateTime @updatedAt
+  aluno            Aluno?
+
+  @@map("usuarios")
+}
+
+model Turma {
+  id               Int       @id @default(autoincrement())
+  nome             String
+  descricao        String
+  data_cadastro    DateTime  @default(now())
+  data_atualizacao DateTime  @updatedAt
+  alunos           Aluno[]
+  Chamada          Chamada[]
+
+  @@map("turmas")
+}
+
+model Aluno {
+  id            Int             @id @default(autoincrement())
+  Turma         Turma           @relation(fields: [turmaId], references: [id])
+  turmaId       Int
+  Usuario       Usuario         @relation(fields: [usuario_id], references: [id])
+  usuario_id    Int             @unique
+  AlunoPresenca AlunoPresenca[]
+
+  @@map("alunos")
+}
+
+model Chamada {
+  id             Int             @id @default(autoincrement())
+  data           DateTime        @default(now()) // Data da chamada
+  turmaId        Int
+  Turma          Turma           @relation(fields: [turmaId], references: [id]) // Relação com a turma
+  presencas      Int // Número de alunos presentes
+  faltas         Int // Número de alunos ausentes
+  visitantes     Int // Número de visitantes
+  total_biblias  Int // Quantidade de Bíblias levadas
+  total_revistas Int // Quantidade de revistas levadas
+  total_ofertas  Decimal // Valor total das ofertas
+  alunosPresenca AlunoPresenca[] // Relação com presenças individuais de alunos
+
+  @@map("chamadas")
+}
+
+model AlunoPresenca {
+  id        Int     @id @default(autoincrement())
+  chamadaId Int
+  Chamada   Chamada @relation(fields: [chamadaId], references: [id])
+  alunoId   Int
+  Aluno     Aluno   @relation(fields: [alunoId], references: [id])
+  status    String // 'presente' ou 'faltou'
+
+  @@map("alunos_presencas")
+}
